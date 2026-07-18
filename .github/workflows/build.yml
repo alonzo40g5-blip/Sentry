@@ -39,9 +39,17 @@ jobs:
         working-directory: SentryNVR
         run: gradle assembleDebug --no-daemon --stacktrace
 
+      - name: Name the APK
+        working-directory: SentryNVR
+        run: |
+          VER=$(grep versionName app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          mkdir -p out
+          cp app/build/outputs/apk/debug/app-debug.apk "out/Sentry-v${VER}.apk"
+          ls -la out
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Sentry-app
-          path: SentryNVR/app/build/outputs/apk/debug/app-debug.apk
+          name: Sentry-build
+          path: SentryNVR/out/Sentry-v*.apk
           if-no-files-found: error
