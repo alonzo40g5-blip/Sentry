@@ -12,36 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/lib/android/sdk/ndk || true
-          df -h
-
       - name: Unzip the project
         run: |
           ZIP=$(ls *.zip | head -n1)
           echo "Using archive: $ZIP"
           unzip -o "$ZIP" -d .
           ls SentryNVR
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Export YOLOv8n -> TFLite
-        run: |
-          python -m pip install --upgrade pip
-          # CPU-only PyTorch first, so ultralytics does NOT pull the huge CUDA/GPU stack
-          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install "ultralytics>=8.2,<9"
-          yolo export model=yolov8n.pt format=tflite imgsz=640
-          mkdir -p SentryNVR/app/src/main/assets
-          MODEL=$(find . -name '*float32.tflite' | head -n1)
-          if [ -z "$MODEL" ]; then MODEL=$(find . -name '*.tflite' | head -n1); fi
-          if [ -z "$MODEL" ]; then echo "ERROR: no .tflite produced"; exit 1; fi
-          cp "$MODEL" SentryNVR/app/src/main/assets/yolov8n_float32.tflite
-          echo "Bundled model: $MODEL"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -69,7 +45,7 @@ jobs:
         working-directory: SentryNVR
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk "out/Sentry-v1.0.0.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk out/Sentry-v1.0.0.apk
           ls -la out
 
       - name: Upload APK
